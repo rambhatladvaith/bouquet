@@ -13,7 +13,7 @@
         #letter-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .letter-content { background: var(--paper); padding: 40px; border-radius: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 80%; max-width: 400px; text-align: center; border: 1px solid #ddd; }
 
-        /* THE RECEIVER DISPLAY BOX */
+        /* FIXED RECEIVER BOX - MATCHES CANVAS SIZE EXACTLY */
         #receiver-bouquet-display { 
             position: relative; width: 450px; height: 550px; 
             background-color: var(--paper); border: 12px solid white; 
@@ -30,7 +30,7 @@
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
-<body id="main-body">
+<body>
 
     <div id="reveal-overlay">
         <div class="envelope-icon" onclick="showLetter()">💌</div>
@@ -97,12 +97,8 @@
         const src = imgElement.getAttribute('src');
         fabric.Image.fromURL(src, function(img) {
             img.set({
-                left: 225, 
-                top: 250, 
-                originX: 'center', 
-                originY: 'center',
-                cornerColor: '#C18C8C',
-                flowerPath: src
+                left: 225, top: 250, originX: 'center', originY: 'center',
+                cornerColor: '#C18C8C', flowerPath: src
             });
             img.scaleToWidth(180);
             canvas.add(img);
@@ -120,7 +116,7 @@
             r: Math.round(o.angle)
         }));
         const state = { f: flowers, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
-        const url = window.location.origin + window.location.pathname + "?v=" + btoa(JSON.stringify(state));
+        const url = window.location.origin + window.location.pathname + "?v=" + btoa(unescape(encodeURIComponent(JSON.stringify(state))));
         navigator.clipboard.writeText(url).then(() => alert("Magic Link Copied!"));
     }
 
@@ -131,28 +127,27 @@
             document.getElementById('controls-ui').style.display = 'none';
             document.getElementById('reveal-overlay').style.display = 'flex';
             
-            try {
-                const data = JSON.parse(atob(params.get('v')));
-                document.getElementById('display-note').innerText = decodeURIComponent(escape(atob(data.m)));
+            const raw = params.get('v');
+            const data = JSON.parse(decodeURIComponent(escape(atob(raw))));
+            document.getElementById('display-note').innerText = decodeURIComponent(escape(atob(data.m)));
 
-                const layer = document.getElementById('flower-layer');
-                data.f.forEach(f => {
-                    const img = document.createElement('img');
-                    img.src = f.src;
-                    img.className = 'receiver-flower';
-                    
-                    const size = 180 * f.s; 
-                    img.style.width = size + "px";
-                    // Center alignment math fixed
-                    img.style.left = (f.x - (size / 2)) + "px"; 
-                    img.style.top = (f.y - (size / 2)) + "px";
-                    
-                    img.style.transform = `rotate(${f.r}deg)`;
-                    layer.appendChild(img);
-                });
-            } catch (e) {
-                console.error("Link Error", e);
-            }
+            const layer = document.getElementById('flower-layer');
+            data.f.forEach(f => {
+                const img = document.createElement('img');
+                img.src = f.src;
+                img.className = 'receiver-flower';
+                
+                // MATH FIX: Using the same scale (180px width) as the editor
+                const width = 180 * f.s;
+                img.style.width = width + "px";
+                
+                // centering the image based on its middle point
+                img.style.left = (f.x - (width/2)) + "px";
+                img.style.top = (f.y - (width/2)) + "px";
+                img.style.transform = `rotate(${f.r}deg)`;
+                
+                layer.appendChild(img);
+            });
         }
     }
 
@@ -160,7 +155,7 @@
     function closeLetterAndShow() { 
         document.getElementById('letter-modal').style.display = 'none'; 
         document.getElementById('receiver-bouquet-display').style.display = 'block';
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 </script>
 </body>
