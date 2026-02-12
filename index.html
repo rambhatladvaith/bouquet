@@ -8,16 +8,10 @@
     <style>
         :root { --paper: #FDFBF7; --ink: #4B3621; --ribbon: #C18C8C; }
         body { background-color: #E8E6D9; font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-x: hidden; }
-        
         h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; margin: 10px 0; color: var(--ink); }
-        
-        .shelf { 
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; 
-            margin-bottom: 30px; background: white; padding: 15px; border-radius: 20px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-        }
+        .shelf { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 30px; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .flower-btn { width: 70px; height: 70px; cursor: pointer; object-fit: contain; }
-
+        
         @keyframes bloomIn {
             0% { opacity: 0; transform: scale(0.9) translateY(30px); filter: blur(5px); }
             100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
@@ -29,20 +23,11 @@
             background-color: var(--paper);
             animation: bloomIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
         .controls { margin-top: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        textarea { 
-            font-family: 'Dancing Script', cursive; font-size: 1.8rem; 
-            width: 350px; height: 100px; padding: 15px; border-radius: 15px;
-            border: 1px solid #E3DED0; background: #fff; text-align: center; outline: none;
-        }
+        textarea { font-family: 'Dancing Script', cursive; font-size: 1.8rem; width: 350px; height: 100px; padding: 15px; border-radius: 15px; border: 1px solid #E3DED0; background: #fff; text-align: center; outline: none; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        button { 
-            background: var(--ink); color: white; border: none; padding: 12px 25px; 
-            border-radius: 50px; font-weight: bold; cursor: pointer; font-family: 'Quicksand';
-        }
+        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; font-family: 'Quicksand'; }
         .share-btn { background: var(--ribbon); }
-        .reset-btn { background: #bbb; }
     </style>
 </head>
 <body>
@@ -65,9 +50,9 @@
     <div class="controls">
         <textarea id="note" placeholder="Write something sweet..."></textarea>
         <div class="btn-group">
-            <button onclick="download()">Download</button>
+            <button onclick="downloadWithNote()">Download PNG</button>
             <button class="share-btn" onclick="generateUrl()">Copy Magic Link</button>
-            <button class="reset-btn" onclick="resetCanvas()">Reset</button>
+            <button onclick="resetCanvas()" style="background:#bbb;">Reset</button>
         </div>
     </div>
 
@@ -77,21 +62,17 @@
     function initCanvas() {
         canvas.clear();
         canvas.backgroundColor = '#FDFBF7';
-
-        // COZY WRAPPER
         const wrapperPath = "M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z";
         const cozyWrapper = new fabric.Path(wrapperPath, {
             fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 2,
             left: 225, top: 450, originX: 'center', originY: 'center',
-            selectable: false, opacity: 0.9
+            selectable: false, opacity: 0.9, name: 'static'
         });
         canvas.add(cozyWrapper);
-
-        // THE RIBBON
         const ribbon = new fabric.Ellipse({
             rx: 40, ry: 10, fill: '#C18C8C',
             left: 225, top: 460, originX: 'center', originY: 'center',
-            selectable: false
+            selectable: false, name: 'static'
         });
         canvas.add(ribbon);
     }
@@ -109,37 +90,57 @@
         canvas.renderAll();
     }
 
-    function resetCanvas() {
-        if(confirm("Start a new bouquet?")) {
-            initCanvas();
-            document.getElementById('note').value = "";
-        }
-    }
+    // FIX: DRAW NOTE ONTO CANVAS BEFORE DOWNLOAD
+    function downloadWithNote() {
+        const textVal = document.getElementById('note').value;
+        const tempText = new fabric.Text(textVal, {
+            left: 225, top: 500, originX: 'center',
+            fontFamily: 'Dancing Script', fontSize: 30, fill: '#4B3621'
+        });
+        
+        canvas.add(tempText);
+        canvas.renderAll();
 
-    function download() {
         const link = document.createElement('a');
-        link.download = 'my-bouquet.png';
+        link.download = 'my-digibouquet.png';
         link.href = canvas.toDataURL({ format: 'png', multiplier: 2 });
         link.click();
+
+        canvas.remove(tempText); // Clean up after download
+        canvas.renderAll();
     }
 
     function generateUrl() {
-        const state = { b: canvas.toJSON().objects, m: btoa(document.getElementById('note').value) };
+        // We only save the flowers, not the static wrapper/ribbon to keep URL short
+        const flowerObjects = canvas.getObjects().filter(obj => obj.name !== 'static');
+        const state = {
+            b: flowerObjects,
+            m: btoa(unescape(encodeURIComponent(document.getElementById('note').value)))
+        };
         const encoded = encodeURIComponent(JSON.stringify(state));
         const finalUrl = window.location.origin + window.location.pathname + "?view=" + encoded;
+        
         navigator.clipboard.writeText(finalUrl).then(() => {
             alert("Magic Link Copied! ✨");
         });
     }
 
+    function resetCanvas() { if(confirm("Start a new bouquet?")) { initCanvas(); document.getElementById('note').value = ""; } }
+
     window.onload = () => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('view')) {
-            const data = JSON.parse(decodeURIComponent(urlParams.get('view')));
-            canvas.loadFromJSON({objects: data.b}, () => {
-                canvas.renderAll();
-                if(data.m) document.getElementById('note').value = atob(data.m);
-            });
+            try {
+                const data = JSON.parse(decodeURIComponent(urlParams.get('view')));
+                // The initCanvas runs first to create the wrapper, then we add flowers on top
+                data.b.forEach(objData => {
+                    fabric.util.enlivenObjects([objData], (enlivened) => {
+                        enlivened.forEach(obj => canvas.add(obj));
+                        canvas.renderAll();
+                    });
+                });
+                if(data.m) document.getElementById('note').value = decodeURIComponent(escape(atob(data.m)));
+            } catch(e) { console.error("Link error", e); }
         }
     }
 </script>
