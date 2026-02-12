@@ -9,13 +9,19 @@
         :root { --paper: #FDFBF7; --ink: #4B3621; --ribbon: #C18C8C; --bg: #E8E6D9; }
         body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow-x: hidden; }
         
-        /* SEQUENCE 1: THE ENVELOPE */
+        /* THE PRE-LOADER (Important!) */
+        #loader {
+            position: fixed; inset: 0; background: var(--bg); z-index: 300;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid var(--ribbon); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         #reveal-overlay {
             position: fixed; inset: 0; background: var(--bg); z-index: 100;
             display: none; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* SEQUENCE 2: THE LETTER POPUP */
         #letter-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
             display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
@@ -23,11 +29,8 @@
         .letter-content {
             background: var(--paper); padding: 40px; border-radius: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             width: 80%; max-width: 400px; text-align: center; border: 1px solid #ddd;
-            transform: translateY(20px); animation: paperIn 0.8s forwards;
         }
-        @keyframes paperIn { to { transform: translateY(0); } }
 
-        /* SEQUENCE 3: THE BOUQUET BLOOM */
         .canvas-container { 
             border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
             background-color: var(--paper); transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -47,15 +50,17 @@
 </head>
 <body id="main-body">
 
+    <div id="loader"><div class="spinner"></div><p>Gathering flowers...</p></div>
+
     <div id="reveal-overlay">
         <div class="envelope-icon" onclick="showLetter()">💌</div>
-        <div style="font-family:'Dancing Script'; font-size: 2rem; margin-top:20px;">A gift for you...</div>
+        <div style="font-family:'Dancing Script'; font-size: 2rem; margin-top:20px;">For you...</div>
     </div>
 
     <div id="letter-modal">
         <div class="letter-content">
             <p id="display-note" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink); line-height: 1.4;"></p>
-            <button onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon)">View My Bouquet ✨</button>
+            <button onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon)">View Bouquet ✨</button>
         </div>
     </div>
 
@@ -63,18 +68,18 @@
 
     <div id="designer-shelf-ui">
         <div class="shelf">
-            <img class="flower-btn" src="rose.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="peony.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="daisy.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="lily.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="sunflower.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="tulip.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="orchid.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="ranunculus.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="zinnia.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="carnation.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="anemone.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="dahlia.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="rose.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="peony.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="daisy.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="lily.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="sunflower.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="tulip.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="orchid.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="ranunculus.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="zinnia.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="carnation.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="anemone.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
+            <img class="flower-btn" src="dahlia.webp" onload="checkAllLoaded()" onclick="addFlower(this)">
         </div>
     </div>
 
@@ -83,7 +88,7 @@
     </div>
 
     <div id="controls-ui">
-        <textarea id="note" placeholder="Write a note..."></textarea>
+        <textarea id="note" placeholder="Write something sweet..."></textarea>
         <div class="btn-group" id="editor-buttons">
             <button onclick="downloadWithNote()">Save PNG</button>
             <button onclick="generateUrl()" style="background:var(--ribbon)">Copy Magic Link</button>
@@ -93,7 +98,16 @@
 
 <script>
     const canvas = new fabric.Canvas('c', { preserveObjectStacking: true });
-    
+    let imagesLoaded = 0;
+    const totalImages = 12;
+
+    function checkAllLoaded() {
+        imagesLoaded++;
+        if (imagesLoaded >= totalImages) {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
     function initCanvas() {
         canvas.clear();
         canvas.backgroundColor = '#FDFBF7';
@@ -109,15 +123,12 @@
     initCanvas();
 
     function addFlower(imgElement) {
-        const img = new fabric.Image(imgElement, {
-            left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C'
-        });
+        const img = new fabric.Image(imgElement, { left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C' });
         img.scaleToWidth(180);
         canvas.add(img);
         canvas.renderAll();
     }
 
-    // FLOW CONTROL
     function showLetter() {
         document.getElementById('reveal-overlay').style.display = 'none';
         document.getElementById('letter-modal').style.display = 'flex';
@@ -126,26 +137,26 @@
     function closeLetterAndBloom() {
         document.getElementById('letter-modal').style.display = 'none';
         document.getElementById('canvas-box').classList.add('visible');
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 100);
     }
 
-    // DOWNLOAD FIX: Wait for images to render
     function downloadWithNote() {
         const textVal = document.getElementById('note').value;
         const tempText = new fabric.Text(textVal, {
-            left: 225, top: 500, originX: 'center', fontFamily: 'Dancing Script', fontSize: 26, fill: '#4B3621'
+            left: 225, top: 510, originX: 'center', fontFamily: 'Dancing Script', fontSize: 26, fill: '#4B3621'
         });
         canvas.add(tempText);
         canvas.renderAll();
-        
         setTimeout(() => {
             const link = document.createElement('a');
-            link.download = 'my-bouquet.png';
-            link.href = canvas.toDataURL({ format: 'png', multiplier: 2 });
+            link.download = 'bouquet.png';
+            link.href = canvas.toDataURL({ multiplier: 2 });
             link.click();
             canvas.remove(tempText);
             canvas.renderAll();
-        }, 500);
+        }, 300);
     }
 
     function generateUrl() {
@@ -166,6 +177,7 @@
             document.getElementById('editor-buttons').style.display = 'none';
             
             const data = JSON.parse(decodeURIComponent(params.get('view')));
+            // USE ENLIVEN OBJECTS BUT RENDER AFTER COMPLETE
             fabric.util.enlivenObjects(data.b, (objs) => {
                 objs.forEach(o => canvas.add(o));
                 canvas.renderAll();
@@ -173,6 +185,9 @@
             const decodedNote = decodeURIComponent(escape(atob(data.m)));
             document.getElementById('note').value = decodedNote;
             document.getElementById('display-note').innerText = decodedNote;
+        } else {
+            // Safety: if designer mode, loader disappears after a sec anyway
+            setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1500);
         }
     }
 </script>
