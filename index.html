@@ -36,7 +36,7 @@
     <div id="letter-modal">
         <div class="letter-content">
             <p id="display-note" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink); line-height: 1.4;"></p>
-            <button onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon);">View My Bouquet ✨</button>
+            <button id="view-btn" onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon);">View My Bouquet ✨</button>
         </div>
     </div>
 
@@ -91,9 +91,10 @@
     initCanvas();
 
     function addFlower(imgElement) {
+        const fName = imgElement.getAttribute('src');
         const img = new fabric.Image(imgElement, {
             left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C',
-            flowerName: imgElement.id
+            flowerID: fName
         });
         img.scaleToWidth(180);
         canvas.add(img);
@@ -101,16 +102,31 @@
     }
 
     function generateUrl() {
-        const flowers = canvas.getObjects().filter(o => o.flowerName).map(o => ({
-            n: o.flowerName, l: Math.round(o.left), t: Math.round(o.top), 
-            s: parseFloat(o.scaleX.toFixed(2)), a: Math.round(o.angle)
+        const bouquet = canvas.getObjects().filter(o => o.flowerID).map(o => ({
+            id: o.flowerID, l: o.left, t: o.top, s: o.scaleX, a: o.angle
         }));
-        
-        const state = { f: flowers, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
-        const urlString = JSON.stringify(state);
-        const url = window.location.origin + window.location.pathname + "?v=" + btoa(unescape(encodeURIComponent(urlString)));
-        
-        navigator.clipboard.writeText(url).then(() => alert("Magic Link Copied! 🌸"));
+        const state = { f: bouquet, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
+        const url = window.location.origin + window.location.pathname + "?v=" + btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+        navigator.clipboard.writeText(url).then(() => alert("Link Copied! 🌸"));
+    }
+
+    function renderBouquet(data) {
+        // Clear existing flowers but keep wrapper
+        const staticObjects = canvas.getObjects().filter(o => o.name === 'static');
+        canvas.clear();
+        staticObjects.forEach(o => canvas.add(o));
+
+        data.f.forEach(flower => {
+            const imgEl = document.getElementById(flower.id);
+            if (imgEl && imgEl.complete) {
+                const fImg = new fabric.Image(imgEl, {
+                    left: flower.l, top: flower.t, scaleX: flower.s, scaleY: flower.s,
+                    angle: flower.a, originX: 'center', originY: 'center'
+                });
+                canvas.add(fImg);
+            }
+        });
+        canvas.renderAll();
     }
 
     window.onload = () => {
@@ -118,34 +134,29 @@
         if (params.has('v')) {
             document.getElementById('main-body').classList.add('is-receiver');
             document.getElementById('reveal-overlay').style.display = 'flex';
-            document.getElementById('designer-shelf-ui').style.display = 'none';
+            document.getElementById('designer-shelf-ui').style.opacity = '0'; // Hide shelf but keep in DOM
             document.getElementById('editor-buttons').style.display = 'none';
-            
-            try {
-                const data = JSON.parse(decodeURIComponent(escape(atob(params.get('v')))));
-                const decodedNote = decodeURIComponent(escape(atob(data.m)));
-                document.getElementById('note').value = decodedNote;
-                document.getElementById('display-note').innerText = decodedNote;
 
-                data.f.forEach(flower => {
-                    const imgEl = document.getElementById(flower.n);
-                    if (imgEl) {
-                        const fImg = new fabric.Image(imgEl, {
-                            left: flower.l, top: flower.t, scaleX: flower.s, scaleY: flower.s, 
-                            angle: flower.a, originX: 'center', originY: 'center'
-                        });
-                        canvas.add(fImg);
-                    }
-                });
-                canvas.renderAll();
-            } catch(e) { console.error("Link decode failed", e); }
+            const rawData = JSON.parse(decodeURIComponent(escape(atob(params.get('v')))));
+            const decodedNote = decodeURIComponent(escape(atob(rawData.m)));
+            document.getElementById('display-note').innerText = decodedNote;
+
+            // RETRY LOGIC: Try to render every 500ms until successful
+            let attempts = 0;
+            const checkLoad = setInterval(() => {
+                renderBouquet(rawData);
+                attempts++;
+                // If we have flowers on canvas or hit 20 attempts, stop
+                if (canvas.getObjects().length > 2 || attempts > 20) {
+                    clearInterval(checkLoad);
+                }
+            }, 500);
         }
-    }
+    };
 
     function showLetter() { document.getElementById('reveal-overlay').style.display = 'none'; document.getElementById('letter-modal').style.display = 'flex'; }
     function closeLetterAndBloom() { document.getElementById('letter-modal').style.display = 'none'; document.getElementById('canvas-box').classList.add('visible'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100); }
     function resetCanvas() { if(confirm("Reset?")) { initCanvas(); document.getElementById('note').value=""; } }
-    function downloadWithNote() { /* (Same as before) */ }
 </script>
 </body>
 </html>
