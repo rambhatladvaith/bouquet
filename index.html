@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digibouquet | Cozy Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --paper: #FDFBF7; --ink: #4B3621; --ribbon: #C18C8C; }
+        body { background-color: #E8E6D9; font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-x: hidden; }
+        
+        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; margin: 10px 0; color: var(--ink); }
+        
+        .shelf { 
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; 
+            margin-bottom: 30px; background: white; padding: 15px; border-radius: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+        }
+        .flower-btn { width: 70px; height: 70px; cursor: pointer; object-fit: contain; }
+
+        @keyframes bloomIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+
+        .canvas-container { 
+            border: 15px solid white; border-radius: 10px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
+            background-color: var(--paper);
+            animation: bloomIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .controls { margin-top: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        textarea { 
+            font-family: 'Dancing Script', cursive; font-size: 1.8rem; 
+            width: 350px; height: 100px; padding: 15px; border-radius: 15px;
+            border: 1px solid #E3DED0; background: #fff; text-align: center; outline: none;
+        }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        button { 
+            background: var(--ink); color: white; border: none; padding: 12px 25px; 
+            border-radius: 50px; font-weight: bold; cursor: pointer; font-family: 'Quicksand';
+        }
+        .share-btn { background: var(--ribbon); }
+        .reset-btn { background: #bbb; }
+    </style>
+</head>
+<body>
+
+    <h1>Digibouquet</h1>
+
+    <div class="shelf">
+        <img class="flower-btn" src="rose.webp" onclick="addFlower(this)">
+        <img class="flower-btn" src="peony.webp" onclick="addFlower(this)">
+        <img class="flower-btn" src="daisy.webp" onclick="addFlower(this)">
+        <img class="flower-btn" src="lily.webp" onclick="addFlower(this)">
+        <img class="flower-btn" src="sunflower.webp" onclick="addFlower(this)">
+        <img class="flower-btn" src="tulip.webp" onclick="addFlower(this)">
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="c" width="450" height="550"></canvas>
+    </div>
+
+    <div class="controls">
+        <textarea id="note" placeholder="Write something sweet..."></textarea>
+        <div class="btn-group">
+            <button onclick="download()">Download</button>
+            <button class="share-btn" onclick="generateUrl()">Copy Magic Link</button>
+            <button class="reset-btn" onclick="resetCanvas()">Reset</button>
+        </div>
+    </div>
+
+<script>
+    const canvas = new fabric.Canvas('c', { preserveObjectStacking: true });
+    
+    function initCanvas() {
+        canvas.clear();
+        canvas.backgroundColor = '#FDFBF7';
+
+        // COZY WRAPPER
+        const wrapperPath = "M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z";
+        const cozyWrapper = new fabric.Path(wrapperPath, {
+            fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 2,
+            left: 225, top: 450, originX: 'center', originY: 'center',
+            selectable: false, opacity: 0.9
+        });
+        canvas.add(cozyWrapper);
+
+        // THE RIBBON
+        const ribbon = new fabric.Ellipse({
+            rx: 40, ry: 10, fill: '#C18C8C',
+            left: 225, top: 460, originX: 'center', originY: 'center',
+            selectable: false
+        });
+        canvas.add(ribbon);
+    }
+
+    initCanvas();
+
+    function addFlower(imgElement) {
+        const imgInstance = new fabric.Image(imgElement, {
+            left: 225, top: 250, originX: 'center', originY: 'center',
+            cornerColor: '#C18C8C', cornerSize: 12, transparentCorners: false
+        });
+        imgInstance.scaleToWidth(180);
+        canvas.add(imgInstance);
+        canvas.setActiveObject(imgInstance);
+        canvas.renderAll();
+    }
+
+    function resetCanvas() {
+        if(confirm("Start a new bouquet?")) {
+            initCanvas();
+            document.getElementById('note').value = "";
+        }
+    }
+
+    function download() {
+        const link = document.createElement('a');
+        link.download = 'my-bouquet.png';
+        link.href = canvas.toDataURL({ format: 'png', multiplier: 2 });
+        link.click();
+    }
+
+    function generateUrl() {
+        const state = { b: canvas.toJSON().objects, m: btoa(document.getElementById('note').value) };
+        const encoded = encodeURIComponent(JSON.stringify(state));
+        const finalUrl = window.location.origin + window.location.pathname + "?view=" + encoded;
+        navigator.clipboard.writeText(finalUrl).then(() => {
+            alert("Magic Link Copied! ✨");
+        });
+    }
+
+    window.onload = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('view')) {
+            const data = JSON.parse(decodeURIComponent(urlParams.get('view')));
+            canvas.loadFromJSON({objects: data.b}, () => {
+                canvas.renderAll();
+                if(data.m) document.getElementById('note').value = atob(data.m);
+            });
+        }
+    }
+</script>
+</body>
+</html>
