@@ -8,109 +8,160 @@
     <style>
         :root { --paper: #FDFBF7; --ink: #4B3621; --ribbon: #C18C8C; --bg: #E8E6D9; }
         body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        
         #reveal-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
         #letter-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .letter-content { background: var(--paper); padding: 40px; border-radius: 2px; width: 80%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        #receiver-display { position: relative; width: 450px; height: 550px; background: var(--paper); border: 12px solid white; border-radius: 8px; display: none; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        .f-img { position: absolute; transform-origin: center; pointer-events: none; }
+        .letter-content { background: var(--paper); padding: 40px; border-radius: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 80%; max-width: 400px; text-align: center; border: 1px solid #ddd; }
+
+        /* THE RECEIVER DISPLAY BOX */
+        #receiver-bouquet-display { 
+            position: relative; width: 450px; height: 550px; 
+            background-color: var(--paper); border: 12px solid white; 
+            border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            display: none; overflow: hidden; margin-top: 20px;
+        }
+        .receiver-flower { position: absolute; transform-origin: center; pointer-events: none; }
+
         .shelf { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 20px; }
-        .flower-btn { width: 60px; height: 60px; cursor: pointer; }
-        textarea { font-family: 'Dancing Script', cursive; font-size: 1.8rem; width: 350px; height: 80px; text-align: center; margin-top: 20px; border-radius: 15px; border: 1px solid #ccc; }
-        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .env { font-size: 5rem; cursor: pointer; animation: float 3s infinite; }
+        .flower-btn { width: 60px; height: 60px; cursor: pointer; object-fit: contain; }
+        textarea { font-family: 'Dancing Script', cursive; font-size: 1.8rem; width: 350px; height: 80px; padding: 15px; border-radius: 15px; border: 1px solid #ccc; text-align: center; margin-top: 20px; outline: none; }
+        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .envelope-icon { font-size: 5rem; cursor: pointer; animation: float 3s infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <div id="reveal-overlay">
-        <div class="env" onclick="openEnv()">💌</div>
-        <p style="font-family:'Dancing Script'; font-size: 2rem;">A gift for you...</p>
+        <div class="envelope-icon" onclick="showLetter()">💌</div>
+        <div style="font-family:'Dancing Script'; font-size: 2rem; margin-top:20px;">Open your gift...</div>
     </div>
 
     <div id="letter-modal">
         <div class="letter-content">
-            <p id="msg" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink);"></p>
-            <button onclick="showBouquet()">View My Bouquet ✨</button>
+            <p id="display-note" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink); line-height: 1.4;"></p>
+            <button onclick="closeLetterAndShow()">View My Bouquet ✨</button>
         </div>
     </div>
 
-    <h1 style="font-family:'Dancing Script'; font-size: 3.5rem;">Digibouquet</h1>
+    <h1 style="font-family:'Dancing Script'; font-size: 3.5rem; margin:10px;">Digibouquet</h1>
 
-    <div id="editor">
+    <div id="designer-ui">
         <div class="shelf">
-            <img class="flower-btn" src="rose.webp" onclick="addF(this)">
-            <img class="flower-btn" src="peony.webp" onclick="addF(this)">
-            <img class="flower-btn" src="daisy.webp" onclick="addF(this)">
-            <img class="flower-btn" src="lily.webp" onclick="addF(this)">
-            <img class="flower-btn" src="sunflower.webp" onclick="addF(this)">
-            <img class="flower-btn" src="tulip.webp" onclick="addF(this)">
-            <img class="flower-btn" src="orchid.webp" onclick="addF(this)">
-            <img class="flower-btn" src="ranunculus.webp" onclick="addF(this)">
-            <img class="flower-btn" src="zinnia.webp" onclick="addF(this)">
-            <img class="flower-btn" src="carnation.webp" onclick="addF(this)">
-            <img class="flower-btn" src="anemone.webp" onclick="addF(this)">
-            <img class="flower-btn" src="dahlia.webp" onclick="addF(this)">
+            <img class="flower-btn" src="rose.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="peony.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="daisy.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="lily.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="sunflower.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="tulip.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="orchid.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="ranunculus.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="zinnia.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="carnation.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="anemone.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="dahlia.webp" onclick="addFlower(this)">
         </div>
-        <canvas id="c" width="450" height="550" style="border:12px solid white; border-radius:8px;"></canvas>
-        <br><textarea id="note" placeholder="Write a note..."></textarea><br>
-        <button onclick="genLink()" style="background:var(--ribbon)">Copy Magic Link</button>
+        <canvas id="c" width="450" height="550" style="border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);"></canvas>
     </div>
 
-    <div id="receiver-display">
-        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:300px; height:220px; background:#E6D5C3; clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%); z-index:1;"></div>
+    <div id="receiver-bouquet-display">
+        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:300px; height:250px; background:#E6D5C3; clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%); z-index:1;"></div>
         <div style="position:absolute; bottom:180px; left:50%; transform:translateX(-50%); width:120px; height:15px; background:var(--ribbon); border-radius:5px; z-index:10;"></div>
-        <div id="f-layer" style="position:absolute; inset:0; z-index:5;"></div>
+        <div id="flower-layer" style="position:absolute; inset:0; z-index:5;"></div>
+    </div>
+
+    <div id="controls-ui">
+        <textarea id="note" placeholder="Write a note..."></textarea><br>
+        <button onclick="generateUrl()" style="background:var(--ribbon)">Copy Magic Link</button>
+        <button onclick="location.reload()" style="background:#bbb">Reset</button>
     </div>
 
 <script>
-    const canvas = new fabric.Canvas('c');
-    function init() {
+    const canvas = new fabric.Canvas('c', { preserveObjectStacking: true });
+    
+    function initCanvas() {
+        canvas.clear();
         canvas.backgroundColor = '#FDFBF7';
-        const wrap = new fabric.Path("M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z", { fill: '#E6D5C3', left: 225, top: 450, originX: 'center', originY: 'center', selectable: false });
-        const rib = new fabric.Rect({ width: 120, height: 15, fill: '#C18C8C', left: 225, top: 460, originX: 'center', originY: 'center', selectable: false, rx: 5 });
-        canvas.add(wrap, rib);
+        const wrapper = new fabric.Path("M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z", {
+            fill: '#E6D5C3', left: 225, top: 450, originX: 'center', originY: 'center', selectable: false, name: 'static'
+        });
+        const ribbon = new fabric.Rect({
+            width: 120, height: 15, fill: '#C18C8C', left: 225, top: 460, originX: 'center', originY: 'center', selectable: false, name: 'static', rx: 5
+        });
+        canvas.add(wrapper, ribbon);
         canvas.renderAll();
     }
-    init();
+    initCanvas();
 
-    function addF(el) {
-        const img = new fabric.Image(el, { left: 225, top: 250, originX: 'center', originY: 'center', fPath: el.getAttribute('src') });
-        img.scaleToWidth(180);
-        canvas.add(img);
+    function addFlower(imgElement) {
+        const src = imgElement.getAttribute('src');
+        fabric.Image.fromURL(src, function(img) {
+            img.set({
+                left: 225, 
+                top: 250, 
+                originX: 'center', 
+                originY: 'center',
+                cornerColor: '#C18C8C',
+                flowerPath: src
+            });
+            img.scaleToWidth(180);
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+        });
     }
 
-    function genLink() {
-        const fs = canvas.getObjects().filter(o => o.fPath).map(o => `${o.fPath},${Math.round(o.left)},${Math.round(o.top)},${o.scaleX.toFixed(2)},${o.angle}`);
-        const msg = btoa(encodeURIComponent(document.getElementById('note').value));
-        const url = `${window.location.origin}${window.location.pathname}?flowers=${encodeURIComponent(fs.join('|'))}&msg=${msg}`;
-        navigator.clipboard.writeText(url).then(() => alert("Link Copied! 🌸"));
+    function generateUrl() {
+        const flowers = canvas.getObjects().filter(o => o.flowerPath).map(o => ({
+            src: o.flowerPath,
+            x: Math.round(o.left),
+            y: Math.round(o.top),
+            s: parseFloat(o.scaleX.toFixed(2)),
+            r: Math.round(o.angle)
+        }));
+        const state = { f: flowers, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
+        const url = window.location.origin + window.location.pathname + "?v=" + btoa(JSON.stringify(state));
+        navigator.clipboard.writeText(url).then(() => alert("Magic Link Copied!"));
     }
 
     window.onload = () => {
-        const p = new URLSearchParams(window.location.search);
-        if (p.has('flowers')) {
-            document.getElementById('editor').style.display = 'none';
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('v')) {
+            document.getElementById('designer-ui').style.display = 'none';
+            document.getElementById('controls-ui').style.display = 'none';
             document.getElementById('reveal-overlay').style.display = 'flex';
-            document.getElementById('msg').innerText = decodeURIComponent(atob(p.get('msg')));
             
-            const flist = decodeURIComponent(p.get('flowers')).split('|');
-            flist.forEach(str => {
-                const [src, x, y, s, r] = str.split(',');
-                const i = document.createElement('img');
-                i.src = src;
-                i.className = 'f-img';
-                i.style.width = (180 * s) + "px";
-                i.style.left = (x - (90 * s)) + "px";
-                i.style.top = (y - (90 * s)) + "px";
-                i.style.transform = `rotate(${r}deg)`;
-                document.getElementById('f-layer').appendChild(i);
-            });
+            try {
+                const data = JSON.parse(atob(params.get('v')));
+                document.getElementById('display-note').innerText = decodeURIComponent(escape(atob(data.m)));
+
+                const layer = document.getElementById('flower-layer');
+                data.f.forEach(f => {
+                    const img = document.createElement('img');
+                    img.src = f.src;
+                    img.className = 'receiver-flower';
+                    
+                    const size = 180 * f.s; 
+                    img.style.width = size + "px";
+                    // Center alignment math fixed
+                    img.style.left = (f.x - (size / 2)) + "px"; 
+                    img.style.top = (f.y - (size / 2)) + "px";
+                    
+                    img.style.transform = `rotate(${f.r}deg)`;
+                    layer.appendChild(img);
+                });
+            } catch (e) {
+                console.error("Link Error", e);
+            }
         }
     }
 
-    function openEnv() { document.getElementById('reveal-overlay').style.display = 'none'; document.getElementById('letter-modal').style.display = 'flex'; }
-    function showBouquet() { document.getElementById('letter-modal').style.display = 'none'; document.getElementById('receiver-display').style.display = 'block'; }
+    function showLetter() { document.getElementById('reveal-overlay').style.display = 'none'; document.getElementById('letter-modal').style.display = 'flex'; }
+    function closeLetterAndShow() { 
+        document.getElementById('letter-modal').style.display = 'none'; 
+        document.getElementById('receiver-bouquet-display').style.display = 'block';
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
 </script>
 </body>
 </html>
