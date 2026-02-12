@@ -2,77 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Digibouquet | Studio</title>
+    <title>A Special Delivery</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --paper: #FDFBF7; --ink: #4B3621; --ribbon: #C18C8C; --bg: #E8E6D9; }
-        body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow-x: hidden; }
         
+        /* SEQUENCE 1: THE ENVELOPE */
         #reveal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg); z-index: 100; display: none; flex-direction: column;
-            align-items: center; justify-content: center; opacity: 1; transition: 0.8s;
+            position: fixed; inset: 0; background: var(--bg); z-index: 100;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
         }
 
+        /* SEQUENCE 2: THE LETTER POPUP */
+        #letter-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .letter-content {
+            background: var(--paper); padding: 40px; border-radius: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 80%; max-width: 400px; text-align: center; border: 1px solid #ddd;
+            transform: translateY(20px); animation: paperIn 0.8s forwards;
+        }
+        @keyframes paperIn { to { transform: translateY(0); } }
+
+        /* SEQUENCE 3: THE BOUQUET BLOOM */
         .canvas-container { 
-            border: 12px solid white; border-radius: 8px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
-            background-color: var(--paper);
-            /* Force visibility for the designer */
-            display: block !important;
-            opacity: 1 !important;
-            transform: scale(1) !important;
+            border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
+            background-color: var(--paper); transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
-        /* Receiver animation */
-        .is-receiver .canvas-container { opacity: 0; transform: scale(0.9); transition: 1.5s; }
-        .is-receiver .canvas-container.visible { opacity: 1; transform: scale(1); }
+        .is-receiver .canvas-container { opacity: 0; transform: scale(0.8) translateY(100px); }
+        .is-receiver .canvas-container.visible { opacity: 1; transform: scale(1) translateY(0); }
 
-        .shelf { 
-            display: grid; 
-            grid-template-columns: repeat(6, 1fr); 
-            gap: 10px; 
-            margin-bottom: 20px; 
-            background: white; 
-            padding: 15px; 
-            border-radius: 20px;
-            max-width: 500px;
-        }
-        .flower-btn { width: 60px; height: 60px; cursor: pointer; transition: 0.2s; object-fit: contain; }
-        .flower-btn:hover { transform: scale(1.1); }
-        
+        .shelf { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 20px; }
+        .flower-btn { width: 60px; height: 60px; cursor: pointer; object-fit: contain; }
         textarea { font-family: 'Dancing Script', cursive; font-size: 1.8rem; width: 350px; height: 80px; padding: 15px; border-radius: 15px; border: 1px solid #ccc; text-align: center; margin-top: 20px; outline: none; }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; font-family: 'Quicksand'; }
+        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; }
         
-        .envelope-icon { font-size: 5rem; cursor: pointer; animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .envelope-icon { font-size: 5rem; cursor: pointer; animation: float 3s infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
 <body id="main-body">
 
     <div id="reveal-overlay">
-        <div class="envelope-icon" onclick="reveal()">💌</div>
-        <div style="font-family:'Dancing Script'; font-size: 2rem; margin-top:20px;">Open your gift...</div>
+        <div class="envelope-icon" onclick="showLetter()">💌</div>
+        <div style="font-family:'Dancing Script'; font-size: 2rem; margin-top:20px;">A gift for you...</div>
+    </div>
+
+    <div id="letter-modal">
+        <div class="letter-content">
+            <p id="display-note" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink); line-height: 1.4;"></p>
+            <button onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon)">View My Bouquet ✨</button>
+        </div>
     </div>
 
     <h1 style="font-family:'Dancing Script'; font-size: 3.5rem; margin:10px;">Digibouquet</h1>
 
     <div id="designer-shelf-ui">
         <div class="shelf">
-            <img class="flower-btn" src="rose.webp" title="Rose" onclick="addFlower(this)">
-            <img class="flower-btn" src="peony.webp" title="Peony" onclick="addFlower(this)">
-            <img class="flower-btn" src="daisy.webp" title="Daisy" onclick="addFlower(this)">
-            <img class="flower-btn" src="lily.webp" title="Lily" onclick="addFlower(this)">
-            <img class="flower-btn" src="sunflower.webp" title="Sunflower" onclick="addFlower(this)">
-            <img class="flower-btn" src="tulip.webp" title="Tulip" onclick="addFlower(this)">
-            <img class="flower-btn" src="orchid.webp" title="Orchid" onclick="addFlower(this)">
-            <img class="flower-btn" src="ranunculus.webp" title="Ranunculus" onclick="addFlower(this)">
-            <img class="flower-btn" src="zinnia.webp" title="Zinnia" onclick="addFlower(this)">
-            <img class="flower-btn" src="carnation.webp" title="Carnation" onclick="addFlower(this)">
-            <img class="flower-btn" src="anemone.webp" title="Anemone" onclick="addFlower(this)">
-            <img class="flower-btn" src="dahlia.webp" title="Dahlia" onclick="addFlower(this)">
+            <img class="flower-btn" src="rose.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="peony.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="daisy.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="lily.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="sunflower.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="tulip.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="orchid.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="ranunculus.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="zinnia.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="carnation.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="anemone.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="dahlia.webp" onclick="addFlower(this)">
         </div>
     </div>
 
@@ -83,7 +85,7 @@
     <div id="controls-ui">
         <textarea id="note" placeholder="Write a note..."></textarea>
         <div class="btn-group" id="editor-buttons">
-            <button onclick="download()">Save PNG</button>
+            <button onclick="downloadWithNote()">Save PNG</button>
             <button onclick="generateUrl()" style="background:var(--ribbon)">Copy Magic Link</button>
             <button onclick="resetCanvas()" style="background:#bbb">Reset</button>
         </div>
@@ -95,41 +97,55 @@
     function initCanvas() {
         canvas.clear();
         canvas.backgroundColor = '#FDFBF7';
-        // The Cozy Wrapper
         const wrapper = new fabric.Path("M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z", {
-            fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 1.5,
-            left: 225, top: 450, originX: 'center', originY: 'center',
-            selectable: false, opacity: 0.9, name: 'static'
+            fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 1.5, left: 225, top: 450, originX: 'center', originY: 'center', selectable: false, name: 'static'
         });
-        // The Ribbon
         const ribbon = new fabric.Rect({
-            width: 120, height: 15, fill: '#C18C8C',
-            left: 225, top: 460, originX: 'center', originY: 'center',
-            selectable: false, name: 'static', rx: 5
+            width: 120, height: 15, fill: '#C18C8C', left: 225, top: 460, originX: 'center', originY: 'center', selectable: false, name: 'static', rx: 5
         });
         canvas.add(wrapper, ribbon);
-        canvas.renderAll();
     }
 
     initCanvas();
 
     function addFlower(imgElement) {
-        const imgInstance = new fabric.Image(imgElement, {
-            left: 225, top: 250, originX: 'center', originY: 'center',
-            cornerColor: '#C18C8C', cornerSize: 12, transparentCorners: false
+        const img = new fabric.Image(imgElement, {
+            left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C'
         });
-        imgInstance.scaleToWidth(180);
-        canvas.add(imgInstance);
-        canvas.setActiveObject(imgInstance);
+        img.scaleToWidth(180);
+        canvas.add(img);
         canvas.renderAll();
     }
 
-    function reveal() {
-        document.getElementById('reveal-overlay').style.opacity = '0';
+    // FLOW CONTROL
+    function showLetter() {
+        document.getElementById('reveal-overlay').style.display = 'none';
+        document.getElementById('letter-modal').style.display = 'flex';
+    }
+
+    function closeLetterAndBloom() {
+        document.getElementById('letter-modal').style.display = 'none';
+        document.getElementById('canvas-box').classList.add('visible');
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    // DOWNLOAD FIX: Wait for images to render
+    function downloadWithNote() {
+        const textVal = document.getElementById('note').value;
+        const tempText = new fabric.Text(textVal, {
+            left: 225, top: 500, originX: 'center', fontFamily: 'Dancing Script', fontSize: 26, fill: '#4B3621'
+        });
+        canvas.add(tempText);
+        canvas.renderAll();
+        
         setTimeout(() => {
-            document.getElementById('reveal-overlay').style.display = 'none';
-            document.getElementById('canvas-box').classList.add('visible');
-        }, 800);
+            const link = document.createElement('a');
+            link.download = 'my-bouquet.png';
+            link.href = canvas.toDataURL({ format: 'png', multiplier: 2 });
+            link.click();
+            canvas.remove(tempText);
+            canvas.renderAll();
+        }, 500);
     }
 
     function generateUrl() {
@@ -137,13 +153,6 @@
         const state = { b: flowers, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
         const url = window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(JSON.stringify(state));
         navigator.clipboard.writeText(url).then(() => alert("Magic Link Copied!"));
-    }
-
-    function download() {
-        const link = document.createElement('a');
-        link.download = 'bouquet.png';
-        link.href = canvas.toDataURL({ multiplier: 2 });
-        link.click();
     }
 
     function resetCanvas() { if(confirm("Reset?")) { initCanvas(); document.getElementById('note').value=""; } }
@@ -161,8 +170,9 @@
                 objs.forEach(o => canvas.add(o));
                 canvas.renderAll();
             });
-            if(data.m) document.getElementById('note').value = decodeURIComponent(escape(atob(data.m)));
-            document.getElementById('note').readOnly = true;
+            const decodedNote = decodeURIComponent(escape(atob(data.m)));
+            document.getElementById('note').value = decodedNote;
+            document.getElementById('display-note').innerText = decodedNote;
         }
     }
 </script>
