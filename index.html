@@ -7,21 +7,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --paper: #FDFBF7; --ink: #4B3621; --ribbon: #C18C8C; --bg: #E8E6D9; }
-        body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow-x: hidden; }
+        body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         
         #reveal-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
         #letter-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .letter-content { background: var(--paper); padding: 40px; border-radius: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 80%; max-width: 400px; text-align: center; border: 1px solid #ddd; }
 
-        .canvas-container { border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); background-color: var(--paper); transition: 1.2s ease-out; }
-        .is-receiver .canvas-container { opacity: 0; transform: translateY(50px); }
-        .is-receiver .canvas-container.visible { opacity: 1; transform: translateY(0); }
+        /* THE RECEIVER DISPLAY BOX */
+        #receiver-bouquet-display { 
+            position: relative; width: 450px; height: 550px; 
+            background-color: var(--paper); border: 12px solid white; 
+            border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            display: none; overflow: hidden; margin-top: 20px;
+        }
+        .receiver-flower { position: absolute; transform-origin: center; pointer-events: none; }
 
         .shelf { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 20px; }
         .flower-btn { width: 60px; height: 60px; cursor: pointer; object-fit: contain; }
         textarea { font-family: 'Dancing Script', cursive; font-size: 1.8rem; width: 350px; height: 80px; padding: 15px; border-radius: 15px; border: 1px solid #ccc; text-align: center; margin-top: 20px; outline: none; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; }
+        button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .envelope-icon { font-size: 5rem; cursor: pointer; animation: float 3s infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
@@ -36,40 +40,40 @@
     <div id="letter-modal">
         <div class="letter-content">
             <p id="display-note" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink); line-height: 1.4;"></p>
-            <button id="view-btn" onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon);">View My Bouquet ✨</button>
+            <button onclick="closeLetterAndShow()">View My Bouquet ✨</button>
         </div>
     </div>
 
     <h1 style="font-family:'Dancing Script'; font-size: 3.5rem; margin:10px;">Digibouquet</h1>
 
-    <div id="designer-shelf-ui">
-        <div class="shelf" id="image-assets">
-            <img class="flower-btn" src="rose.webp" id="rose.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="peony.webp" id="peony.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="daisy.webp" id="daisy.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="lily.webp" id="lily.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="sunflower.webp" id="sunflower.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="tulip.webp" id="tulip.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="orchid.webp" id="orchid.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="ranunculus.webp" id="ranunculus.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="zinnia.webp" id="zinnia.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="carnation.webp" id="carnation.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="anemone.webp" id="anemone.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="dahlia.webp" id="dahlia.webp" onclick="addFlower(this)">
+    <div id="designer-ui">
+        <div class="shelf">
+            <img class="flower-btn" src="rose.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="peony.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="daisy.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="lily.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="sunflower.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="tulip.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="orchid.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="ranunculus.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="zinnia.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="carnation.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="anemone.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="dahlia.webp" onclick="addFlower(this)">
         </div>
+        <canvas id="c" width="450" height="550" style="border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);"></canvas>
     </div>
 
-    <div class="canvas-container" id="canvas-box">
-        <canvas id="c" width="450" height="550"></canvas>
+    <div id="receiver-bouquet-display">
+        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:300px; height:250px; background:#E6D5C3; clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%); z-index:1;"></div>
+        <div style="position:absolute; bottom:180px; left:50%; transform:translateX(-50%); width:120px; height:15px; background:var(--ribbon); border-radius:5px; z-index:10;"></div>
+        <div id="flower-layer" style="position:absolute; inset:0; z-index:5;"></div>
     </div>
 
     <div id="controls-ui">
-        <textarea id="note" placeholder="Write a note..."></textarea>
-        <div class="btn-group" id="editor-buttons">
-            <button onclick="downloadWithNote()">Save PNG</button>
-            <button onclick="generateUrl()" style="background:var(--ribbon)">Copy Magic Link</button>
-            <button onclick="resetCanvas()" style="background:#bbb">Reset</button>
-        </div>
+        <textarea id="note" placeholder="Write a note..."></textarea><br>
+        <button onclick="generateUrl()" style="background:var(--ribbon)">Copy Magic Link</button>
+        <button onclick="location.reload()" style="background:#bbb">Reset</button>
     </div>
 
 <script>
@@ -79,7 +83,7 @@
         canvas.clear();
         canvas.backgroundColor = '#FDFBF7';
         const wrapper = new fabric.Path("M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z", {
-            fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 1.5, left: 225, top: 450, originX: 'center', originY: 'center', selectable: false, name: 'static'
+            fill: '#E6D5C3', left: 225, top: 450, originX: 'center', originY: 'center', selectable: false, name: 'static'
         });
         const ribbon = new fabric.Rect({
             width: 120, height: 15, fill: '#C18C8C', left: 225, top: 460, originX: 'center', originY: 'center', selectable: false, name: 'static', rx: 5
@@ -87,14 +91,12 @@
         canvas.add(wrapper, ribbon);
         canvas.renderAll();
     }
-
     initCanvas();
 
     function addFlower(imgElement) {
-        const fName = imgElement.getAttribute('src');
         const img = new fabric.Image(imgElement, {
-            left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C',
-            flowerID: fName
+            left: 225, top: 250, originX: 'center', originY: 'center', 
+            flowerPath: imgElement.getAttribute('src')
         });
         img.scaleToWidth(180);
         canvas.add(img);
@@ -102,61 +104,48 @@
     }
 
     function generateUrl() {
-        const bouquet = canvas.getObjects().filter(o => o.flowerID).map(o => ({
-            id: o.flowerID, l: o.left, t: o.top, s: o.scaleX, a: o.angle
+        const flowers = canvas.getObjects().filter(o => o.flowerPath).map(o => ({
+            src: o.flowerPath,
+            x: Math.round(o.left),
+            y: Math.round(o.top),
+            s: parseFloat(o.scaleX.toFixed(2)),
+            r: Math.round(o.angle)
         }));
-        const state = { f: bouquet, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
-        const url = window.location.origin + window.location.pathname + "?v=" + btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-        navigator.clipboard.writeText(url).then(() => alert("Link Copied! 🌸"));
-    }
-
-    function renderBouquet(data) {
-        // Clear existing flowers but keep wrapper
-        const staticObjects = canvas.getObjects().filter(o => o.name === 'static');
-        canvas.clear();
-        staticObjects.forEach(o => canvas.add(o));
-
-        data.f.forEach(flower => {
-            const imgEl = document.getElementById(flower.id);
-            if (imgEl && imgEl.complete) {
-                const fImg = new fabric.Image(imgEl, {
-                    left: flower.l, top: flower.t, scaleX: flower.s, scaleY: flower.s,
-                    angle: flower.a, originX: 'center', originY: 'center'
-                });
-                canvas.add(fImg);
-            }
-        });
-        canvas.renderAll();
+        const state = { f: flowers, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
+        const url = window.location.origin + window.location.pathname + "?v=" + btoa(JSON.stringify(state));
+        navigator.clipboard.writeText(url).then(() => alert("Link Copied!"));
     }
 
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
         if (params.has('v')) {
-            document.getElementById('main-body').classList.add('is-receiver');
+            document.getElementById('designer-ui').style.display = 'none';
+            document.getElementById('controls-ui').style.display = 'none';
             document.getElementById('reveal-overlay').style.display = 'flex';
-            document.getElementById('designer-shelf-ui').style.opacity = '0'; // Hide shelf but keep in DOM
-            document.getElementById('editor-buttons').style.display = 'none';
+            
+            const data = JSON.parse(atob(params.get('v')));
+            document.getElementById('display-note').innerText = decodeURIComponent(escape(atob(data.m)));
 
-            const rawData = JSON.parse(decodeURIComponent(escape(atob(params.get('v')))));
-            const decodedNote = decodeURIComponent(escape(atob(rawData.m)));
-            document.getElementById('display-note').innerText = decodedNote;
-
-            // RETRY LOGIC: Try to render every 500ms until successful
-            let attempts = 0;
-            const checkLoad = setInterval(() => {
-                renderBouquet(rawData);
-                attempts++;
-                // If we have flowers on canvas or hit 20 attempts, stop
-                if (canvas.getObjects().length > 2 || attempts > 20) {
-                    clearInterval(checkLoad);
-                }
-            }, 500);
+            const layer = document.getElementById('flower-layer');
+            data.f.forEach(f => {
+                const img = document.createElement('img');
+                img.src = f.src;
+                img.className = 'receiver-flower';
+                img.style.width = (180 * f.s) + "px";
+                img.style.left = (f.x - (90 * f.s)) + "px"; // Offset to match center origin
+                img.style.top = (f.y - (90 * f.s)) + "px";
+                img.style.transform = `rotate(${f.r}deg)`;
+                layer.appendChild(img);
+            });
         }
-    };
+    }
 
     function showLetter() { document.getElementById('reveal-overlay').style.display = 'none'; document.getElementById('letter-modal').style.display = 'flex'; }
-    function closeLetterAndBloom() { document.getElementById('letter-modal').style.display = 'none'; document.getElementById('canvas-box').classList.add('visible'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100); }
-    function resetCanvas() { if(confirm("Reset?")) { initCanvas(); document.getElementById('note').value=""; } }
+    function closeLetterAndShow() { 
+        document.getElementById('letter-modal').style.display = 'none'; 
+        document.getElementById('receiver-bouquet-display').style.display = 'block';
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
 </script>
 </body>
 </html>
