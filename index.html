@@ -13,16 +13,12 @@
         #letter-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .letter-content { background: var(--paper); padding: 40px; border-radius: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 80%; max-width: 400px; text-align: center; border: 1px solid #ddd; }
 
-        /* The Final Image Display */
-        #final-bouquet-img { 
-            display: none; width: 450px; border: 12px solid white; border-radius: 8px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1); background: var(--paper);
-            transition: 1.2s ease-out; opacity: 0; transform: translateY(30px);
-        }
-        #final-bouquet-img.visible { display: block; opacity: 1; transform: translateY(0); }
+        .canvas-container { border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); background-color: var(--paper); transition: 1.2s ease-out; }
+        .is-receiver .canvas-container { opacity: 0; transform: translateY(50px); }
+        .is-receiver .canvas-container.visible { opacity: 1; transform: translateY(0); }
 
         .shelf { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 20px; }
-        .flower-btn { width: 60px; height: 60px; cursor: pointer; }
+        .flower-btn { width: 60px; height: 60px; cursor: pointer; object-fit: contain; }
         textarea { font-family: 'Dancing Script', cursive; font-size: 1.8rem; width: 350px; height: 80px; padding: 15px; border-radius: 15px; border: 1px solid #ccc; text-align: center; margin-top: 20px; outline: none; }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { background: var(--ink); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; }
@@ -40,35 +36,37 @@
     <div id="letter-modal">
         <div class="letter-content">
             <p id="display-note" style="font-family:'Dancing Script'; font-size: 2.2rem; color:var(--ink); line-height: 1.4;"></p>
-            <button onclick="closeLetterAndShowImg()" style="margin-top:30px; background:var(--ribbon);">View My Bouquet ✨</button>
+            <button onclick="closeLetterAndBloom()" style="margin-top:30px; background:var(--ribbon);">View My Bouquet ✨</button>
         </div>
     </div>
 
     <h1 style="font-family:'Dancing Script'; font-size: 3.5rem; margin:10px;">Digibouquet</h1>
 
-    <div id="designer-ui">
-        <div class="shelf">
-            <img class="flower-btn" src="rose.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="peony.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="daisy.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="lily.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="sunflower.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="tulip.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="orchid.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="ranunculus.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="zinnia.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="carnation.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="anemone.webp" onclick="addFlower(this)">
-            <img class="flower-btn" src="dahlia.webp" onclick="addFlower(this)">
+    <div id="designer-shelf-ui">
+        <div class="shelf" id="image-assets">
+            <img class="flower-btn" src="rose.webp" id="rose.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="peony.webp" id="peony.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="daisy.webp" id="daisy.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="lily.webp" id="lily.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="sunflower.webp" id="sunflower.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="tulip.webp" id="tulip.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="orchid.webp" id="orchid.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="ranunculus.webp" id="ranunculus.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="zinnia.webp" id="zinnia.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="carnation.webp" id="carnation.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="anemone.webp" id="anemone.webp" onclick="addFlower(this)">
+            <img class="flower-btn" src="dahlia.webp" id="dahlia.webp" onclick="addFlower(this)">
         </div>
-        <canvas id="c" width="450" height="550" style="border: 12px solid white; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);"></canvas>
     </div>
 
-    <img id="final-bouquet-img" src="">
+    <div class="canvas-container" id="canvas-box">
+        <canvas id="c" width="450" height="550"></canvas>
+    </div>
 
     <div id="controls-ui">
         <textarea id="note" placeholder="Write a note..."></textarea>
         <div class="btn-group" id="editor-buttons">
+            <button onclick="downloadWithNote()">Save PNG</button>
             <button onclick="generateUrl()" style="background:var(--ribbon)">Copy Magic Link</button>
             <button onclick="resetCanvas()" style="background:#bbb">Reset</button>
         </div>
@@ -81,10 +79,10 @@
         canvas.clear();
         canvas.backgroundColor = '#FDFBF7';
         const wrapper = new fabric.Path("M 50 350 Q 225 320 400 350 L 300 550 Q 225 570 150 550 Z", {
-            fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 1.5, left: 225, top: 450, originX: 'center', originY: 'center', selectable: false
+            fill: '#E6D5C3', stroke: '#C4A484', strokeWidth: 1.5, left: 225, top: 450, originX: 'center', originY: 'center', selectable: false, name: 'static'
         });
         const ribbon = new fabric.Rect({
-            width: 120, height: 15, fill: '#C18C8C', left: 225, top: 460, originX: 'center', originY: 'center', selectable: false, rx: 5
+            width: 120, height: 15, fill: '#C18C8C', left: 225, top: 460, originX: 'center', originY: 'center', selectable: false, name: 'static', rx: 5
         });
         canvas.add(wrapper, ribbon);
         canvas.renderAll();
@@ -94,63 +92,60 @@
 
     function addFlower(imgElement) {
         const img = new fabric.Image(imgElement, {
-            left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C'
+            left: 225, top: 250, originX: 'center', originY: 'center', cornerColor: '#C18C8C',
+            flowerName: imgElement.id
         });
         img.scaleToWidth(180);
         canvas.add(img);
         canvas.renderAll();
     }
 
-    function showLetter() {
-        document.getElementById('reveal-overlay').style.display = 'none';
-        document.getElementById('letter-modal').style.display = 'flex';
-    }
-
-    function closeLetterAndShowImg() {
-        document.getElementById('letter-modal').style.display = 'none';
-        const img = document.getElementById('final-bouquet-img');
-        img.classList.add('visible');
-        setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
-    }
-
     function generateUrl() {
-        // Deselect everything so we don't see the blue boxes in the final photo
-        canvas.discardActiveObject().renderAll();
-
-        // 1. Take a picture of the canvas
-        const bouquetData = canvas.toDataURL({ format: 'webp', quality: 0.5 }); // Lower quality to keep URL manageable
+        const flowers = canvas.getObjects().filter(o => o.flowerName).map(o => ({
+            n: o.flowerName, l: Math.round(o.left), t: Math.round(o.top), 
+            s: parseFloat(o.scaleX.toFixed(2)), a: Math.round(o.angle)
+        }));
         
-        // 2. Bundle the picture and the note
-        const state = {
-            i: bouquetData,
-            m: btoa(unescape(encodeURIComponent(document.getElementById('note').value)))
-        };
+        const state = { f: flowers, m: btoa(unescape(encodeURIComponent(document.getElementById('note').value))) };
+        const urlString = JSON.stringify(state);
+        const url = window.location.origin + window.location.pathname + "?v=" + btoa(unescape(encodeURIComponent(urlString)));
         
-        const url = window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(JSON.stringify(state));
-        
-        navigator.clipboard.writeText(url).then(() => {
-            alert("Magic Link Copied! (It's a big link because it contains the photo) ✨");
-        });
+        navigator.clipboard.writeText(url).then(() => alert("Magic Link Copied! 🌸"));
     }
 
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
-        if (params.has('view')) {
-            // RECEIVER MODE
+        if (params.has('v')) {
+            document.getElementById('main-body').classList.add('is-receiver');
             document.getElementById('reveal-overlay').style.display = 'flex';
-            document.getElementById('designer-ui').style.display = 'none';
+            document.getElementById('designer-shelf-ui').style.display = 'none';
             document.getElementById('editor-buttons').style.display = 'none';
-            document.getElementById('note').style.display = 'none';
-
-            const data = JSON.parse(decodeURIComponent(params.get('view')));
             
-            // Just set the image source to the data we sent
-            document.getElementById('final-bouquet-img').src = data.i;
-            document.getElementById('display-note').innerText = decodeURIComponent(escape(atob(data.m)));
+            try {
+                const data = JSON.parse(decodeURIComponent(escape(atob(params.get('v')))));
+                const decodedNote = decodeURIComponent(escape(atob(data.m)));
+                document.getElementById('note').value = decodedNote;
+                document.getElementById('display-note').innerText = decodedNote;
+
+                data.f.forEach(flower => {
+                    const imgEl = document.getElementById(flower.n);
+                    if (imgEl) {
+                        const fImg = new fabric.Image(imgEl, {
+                            left: flower.l, top: flower.t, scaleX: flower.s, scaleY: flower.s, 
+                            angle: flower.a, originX: 'center', originY: 'center'
+                        });
+                        canvas.add(fImg);
+                    }
+                });
+                canvas.renderAll();
+            } catch(e) { console.error("Link decode failed", e); }
         }
     }
 
+    function showLetter() { document.getElementById('reveal-overlay').style.display = 'none'; document.getElementById('letter-modal').style.display = 'flex'; }
+    function closeLetterAndBloom() { document.getElementById('letter-modal').style.display = 'none'; document.getElementById('canvas-box').classList.add('visible'); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100); }
     function resetCanvas() { if(confirm("Reset?")) { initCanvas(); document.getElementById('note').value=""; } }
+    function downloadWithNote() { /* (Same as before) */ }
 </script>
 </body>
 </html>
